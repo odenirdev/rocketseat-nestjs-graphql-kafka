@@ -1,3 +1,5 @@
+import { INestApplication } from '@nestjs/common';
+import { ClientKafka, ClientsModule, Transport } from '@nestjs/microservices';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { PaginateService } from '../paginate.service';
@@ -9,9 +11,26 @@ import { AnswersService } from './answers.service';
 describe('AnswersResolver', () => {
   let resolver: AnswersResolver;
   let prisma: PrismaService;
+  let app: INestApplication;
+  let client: ClientKafka;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [
+        ClientsModule.register([
+          {
+            transport: Transport.KAFKA,
+            options: {
+              client: {
+                brokers: ['localhost:9092'],
+              },
+              consumer: {
+                groupId: 'challenge-consumer',
+              },
+            },
+          },
+        ]),
+      ],
       providers: [
         AnswersResolver,
         AnswersService,
@@ -26,6 +45,26 @@ describe('AnswersResolver', () => {
 
     await prisma.challenge.deleteMany({});
     await prisma.submission.deleteMany({});
+
+    app = module.createNestApplication();
+
+    app.connectMicroservice({
+      transport: Transport.KAFKA,
+      options: {
+        client: {
+          brokers: ['localhost:9092'],
+        },
+        consumer: {
+          groupId: 'challenge-consumer',
+        },
+      },
+    });
+
+    await app.startAllMicroservices();
+    await app.init();
+
+    client = app.get('SUBMISSION_SERVICE');
+    await client.connect();
   });
 
   it('should be defined', () => {
