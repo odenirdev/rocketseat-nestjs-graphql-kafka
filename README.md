@@ -4,4 +4,9 @@
 
 Repositório de aprendizado sobre API GraphQL com NestJs e comunicação entre serviços via Apache Kafka
 
+| Pacotes                             |
+| ----------------------------------- |
+| [Challenges](/packages/challenges/) |
+| [Correções](/packages/corrections/) |
+
 Made with 💜 at Odenir Gomes
